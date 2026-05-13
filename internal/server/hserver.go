@@ -17,14 +17,25 @@ func NewPublicServer(
 	addr string,
 	mws ...func(next http.Handler) http.Handler,
 ) *Server {
-	//  TODO: пополнить баланс
-	//  TODO: просмотреть информацию о конкретном пользователе по id
-	//  TODO: снять деньги с баланса
-	//  TODO: перевести сумму денег с одного пользователя на другой
+	mux := http.NewServeMux()
 
-	// TODO: доделать public server
+	httpServer := http.Server{
+		Addr:    addr,
+		Handler: hmiddlewares.UseMiddlewares(mux, mws),
+	}
 
-	return &Server{}
+	server := &Server{
+		oplatiService: oplatiService,
+		Server:        &httpServer,
+	}
+
+	mux.HandleFunc("PUT /deposit", server.depositHandler)
+	mux.HandleFunc("PUT /withdraw", server.withdrawHandler)
+	mux.HandleFunc("GET /getUser", server.getUserHandler)
+	mux.HandleFunc("PUT /transfer", server.transferHandler)
+	mux.HandleFunc("POST /newUser", server.newUserHandler)
+
+	return server
 }
 
 func NewPrivateServer(
@@ -44,8 +55,7 @@ func NewPrivateServer(
 		Server:        &httpServer,
 	}
 
-	mux.HandleFunc("POST /newUser", server.newUserHandler)
-	//  TODO: просмотреть информацию о всех пользователях
-
+	mux.HandleFunc("GET /getUsersInfo", server.getUsersInfoHandler)
+	
 	return server
 }
